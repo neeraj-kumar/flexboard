@@ -1,7 +1,7 @@
 import {useState, useContext, useCallback, useMemo, useEffect, createContext} from 'react'
-import {useAtom} from 'jotai';
+import {useAtom, useAtomValue, useSetAtom} from 'jotai';
 
-import {viewsAtom, viewIdxAtom} from './atoms/flexAtoms';
+import {viewsAtom, viewIdxAtom, addViewAtom, deleteViewAtom} from './atoms/flexAtoms';
 import './App.css'
 
 const SERVER = 'http://localhost:8908';
@@ -125,6 +125,7 @@ const PtList = () => {
 
 // A view is one way to look at our data - could be a scatter plot, list, etc
 const View = ({id, onDelete}) => {
+  console.log('Rendering view', id, onDelete);
   return (
     <div className="view" style={{border: '1px solid #ccc', margin: '10px', padding: '10px'}}>
       <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '10px'}}>
@@ -142,8 +143,15 @@ function App() {
   const [ptMd, setPtMd] = useState({}); // point metadata cache
   const [tags, setTags] = useState({});
   const [views, setViews] = useAtom(viewsAtom);
-  const [, setViewIdx] = useAtom(viewIdxAtom);
-  const [nextViewId, setNextViewId] = useAtom(nextViewIdAtom);
+  const [viewIdx, setViewIdx] = useAtom(viewIdxAtom);
+  const addView = useSetAtom(addViewAtom);
+  const deleteView = useSetAtom(deleteViewAtom);
+
+  // add a new view on start
+  useEffect(() => {
+    addView();
+  }, []);
+
 
   // fetch index data
   useEffect(() => {
@@ -190,23 +198,14 @@ function App() {
 
   const ptData = {ids, values, ptMd, getPtMd, tags};
 
-  const addView = () => {
-    setViews([...views, nextViewId]);
-    setNextViewId(prev => prev + 1);
-  };
-
-  const deleteView = (id) => {
-    setViews(views.filter(v => v !== id));
-  };
-
   return (
     <PtCtx.Provider value={ptData}>
       <div>
         <h3>Embeddings Explorer</h3>
         <p>{ids.length} points loaded</p>
         <div className="views">
-        {views.map(id => (
-          <View key={id} id={id} onDelete={deleteView} />
+        {views.map(view => (
+          <View key={view.id} onDelete={deleteView} {...view} />
         ))}
         </div>
         <button onClick={addView} className="add-view-button">Add View</button>
