@@ -142,8 +142,8 @@ function App() {
   const [ptMd, setPtMd] = useState({}); // point metadata cache
   const [tags, setTags] = useState({});
   const [views, setViews] = useAtom(viewsAtom);
-  const [viewIdx, setViewIdx] = useAtom(viewIdxAtom);
-  const [nextViewId, setNextViewId] = useState(1);
+  const [, setViewIdx] = useAtom(viewIdxAtom);
+  const [nextViewId, setNextViewId] = useAtom(nextViewIdAtom);
 
   // fetch index data
   useEffect(() => {
@@ -192,7 +192,7 @@ function App() {
 
   const addView = () => {
     setViews([...views, nextViewId]);
-    setNextViewId(nextViewId + 1);
+    setNextViewId(prev => prev + 1);
   };
 
   const deleteView = (id) => {

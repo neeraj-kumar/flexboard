@@ -12,10 +12,5 @@ export type Bindmap = {
   evals: {[key: string]: any};
 };
 
-// A view, which contains an id, type, and config
-export type View = {
-  id: string;
-  bindmap: Bindmap;
-  // allow any other fields
-  [key: string]: any;
-};
+// A view represents one way to look at our data
+export type View = number;  // Currently just storing the view ID as a number
