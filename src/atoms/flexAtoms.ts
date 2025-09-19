@@ -3,7 +3,7 @@
 import {atom} from 'jotai';
 import {View, Binding, Bindmap} from '../types/common';
 
-const SERVER = 'http://localhost:8908';
+export const SERVER = 'http://localhost:8908';
 
 // Data atoms
 export const idsAtom = atom<string[]>([]);

@@ -1,10 +1,8 @@
 import {useState, useContext, useCallback, useMemo, useEffect, createContext} from 'react'
 import {useAtom, useAtomValue, useSetAtom} from 'jotai';
 
-import {viewsAtom, viewIdxAtom, addViewAtom, deleteViewAtom} from './atoms/flexAtoms';
+import {idsAtom, viewsAtom, viewIdxAtom, addViewAtom, deleteViewAtom, SERVER} from './atoms/flexAtoms';
 import './App.css'
-
-const SERVER = 'http://localhost:8908';
 
 // Create a context for sharing point-related data
 const PtCtx = createContext(null);
