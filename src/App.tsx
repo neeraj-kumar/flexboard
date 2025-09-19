@@ -1,4 +1,7 @@
 import {useState, useContext, useCallback, useMemo, useEffect, createContext} from 'react'
+import {useAtom} from 'jotai';
+
+import {viewsAtom, viewIdxAtom} from './atoms/flexAtoms';
 import './App.css'
 
 const SERVER = 'http://localhost:8908';
@@ -138,7 +141,8 @@ function App() {
   const [values, setValues] = useState({});
   const [ptMd, setPtMd] = useState({}); // point metadata cache
   const [tags, setTags] = useState({});
-  const [views, setViews] = useState([0]); // Start with one view
+  const [views, setViews] = useAtom(viewsAtom);
+  const [viewIdx, setViewIdx] = useAtom(viewIdxAtom);
   const [nextViewId, setNextViewId] = useState(1);
 
   // fetch index data
