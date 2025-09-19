@@ -55,7 +55,7 @@ export const viewsAtom = atom<View[]>([]);
 // Evaluate a particular binding for a given view
 export const evaluateBindingAtom = atom(
   null,
-  (get, set, viewId: string, bindingName: string) => {
+  (get, set, viewId: string, bindingName: string, values: Record<string, number>) => {
     const views = get(viewsAtom);
     const view = views.find(v => v.id === viewId);
     if (!view) return;
@@ -64,7 +64,6 @@ export const evaluateBindingAtom = atom(
     console.log('Evaluating binding', view, bindingName, binding);
     // get input data
     const ids = get(idsAtom);
-    const values = get(fetchIndexAtom); // fetchIndexAtom returns values
     const ptMd = get(ptMdAtom);
     const tags = get(tagsAtom);
     // create a function from the binding definition
@@ -94,6 +93,28 @@ export const evaluateBindingAtom = atom(
   }
 );
 
+// Watcher atom that triggers evaluations when dependencies change
+export const bindingWatcherAtom = atom(
+  (get) => {
+    const views = get(viewsAtom);
+    const ids = get(idsAtom);
+    const ptMd = get(ptMdAtom);
+    const tags = get(tagsAtom);
+    return { views, ids, ptMd, tags };
+  },
+  (get, set) => {
+    const { views } = get(bindingWatcherAtom);
+    const values = get(fetchIndexAtom);
+    
+    // Evaluate all bindings in all views
+    views.forEach(view => {
+      Object.keys(view.bindmap).forEach(bindingName => {
+        set(evaluateBindingAtom, view.id, bindingName, values);
+      });
+    });
+  }
+);
+
 // create a new binding with given name and optional def within a view
 export const addBindingAtom = atom(
   null,
@@ -105,8 +126,9 @@ export const addBindingAtom = atom(
     const newBinding: Binding = {name, def};
     console.log('Adding new binding', view, newBinding);
     view.bindmap[name] = newBinding;
-    // evaluate the new binding on the current data
-    set(evaluateBindingAtom, viewId, name);
+    // evaluate the new binding using current values
+    const values = get(fetchIndexAtom);
+    set(evaluateBindingAtom, viewId, name, values);
     set(viewsAtom, [...views]);
   }
 );

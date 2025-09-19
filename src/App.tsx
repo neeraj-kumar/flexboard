@@ -164,11 +164,17 @@ function App() {
   }, []);
 
 
-  // fetch initial data
+  // fetch initial data and setup binding watcher
   useEffect(() => {
     fetchIndex().then(setValues);
     fetchTags();
   }, []);
+
+  // Setup binding watcher
+  const [, triggerBindingWatch] = useAtom(FA.bindingWatcherAtom);
+  useEffect(() => {
+    triggerBindingWatch();
+  }, [ids, ptMd, tags]);
 
   const ptData = {ids, values, ptMd, getPtMd: fetchPtMd, tags};
 
