@@ -8,7 +8,7 @@ export type Binding = {
 
 // A bindmap contains a list of bindings and their evaluations
 export type Bindmap = {
-  bindings: Binding[];
+  bindings: {[key: string]: Binding};
   evals: {[key: string]: any};
 };
 

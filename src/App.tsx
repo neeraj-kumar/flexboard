@@ -1,7 +1,8 @@
 import {useState, useContext, useCallback, useMemo, useEffect, createContext} from 'react'
 import {useAtom, useAtomValue, useSetAtom} from 'jotai';
 
-import {idsAtom, viewsAtom, viewIdxAtom, addViewAtom, deleteViewAtom, SERVER} from './atoms/flexAtoms';
+import * as FA from './atoms/flexAtoms';
+import {View} from './types/common';
 import './App.css'
 
 // Create a context for sharing point-related data
@@ -121,8 +122,13 @@ const PtList = () => {
   );
 }
 
+type ViewProps = View & {
+  onDelete: (id: string) => void;
+};
+
 // A view is one way to look at our data - could be a scatter plot, list, etc
-const View = ({id, onDelete}) => {
+const ViewComp = (view: ViewProps) => {
+  const {id, onDelete} = view;
   console.log('Rendering view', id, onDelete);
   return (
     <div className="view" style={{border: '1px solid #ccc', margin: '10px', padding: '10px'}}>
@@ -136,18 +142,20 @@ const View = ({id, onDelete}) => {
 }
 
 function App() {
-  const [ids] = useAtom(idsAtom);
+  const ids = useAtomValue(FA.idsAtom);
   const [values, setValues] = useState<Record<string, number>>({});
-  const [ptMd] = useAtom(ptMdAtom);
-  const [tags] = useAtom(tagsAtom);
-  const [views, setViews] = useAtom(viewsAtom);
-  const [viewIdx, setViewIdx] = useAtom(viewIdxAtom);
-  const addView = useSetAtom(addViewAtom);
-  const deleteView = useSetAtom(deleteViewAtom);
-  
-  const [, fetchIndex] = useAtom(fetchIndexAtom);
-  const [, fetchTags] = useAtom(fetchTagsAtom);
-  const [, fetchPtMd] = useAtom(fetchPtMdAtom);
+  const ptMd = useAtomValue(FA.ptMdAtom);
+  const tags = useAtomValue(FA.tagsAtom);
+
+  const [views, setViews] = useAtom(FA.viewsAtom);
+  const [viewIdx, setViewIdx] = useAtom(FA.viewIdxAtom);
+  const addView = useSetAtom(FA.addViewAtom);
+  const deleteView = useSetAtom(FA.deleteViewAtom);
+
+  const fetchIndex = useSetAtom(FA.fetchIndexAtom);
+  const fetchTags = useSetAtom(FA.fetchTagsAtom);
+  const fetchPtMd = useSetAtom(FA.fetchPtMdAtom);
+
   console.log('Got views', views, viewIdx);
 
   // add a new view on start
@@ -171,7 +179,7 @@ function App() {
         <p>{ids.length} points loaded</p>
         <div className="views">
         {views.map(view => (
-          <View key={view.id} onDelete={deleteView} {...view} />
+          <ViewComp key={view.id} onDelete={deleteView} {...view} />
         ))}
         </div>
         <button onClick={addView} className="add-view-button">Add View</button>
