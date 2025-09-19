@@ -137,7 +137,7 @@ const View = ({id, onDelete}) => {
 
 function App() {
   const [ids] = useAtom(idsAtom);
-  const [values] = useAtom(valuesAtom);
+  const [values, setValues] = useState<Record<string, number>>({});
   const [ptMd] = useAtom(ptMdAtom);
   const [tags] = useAtom(tagsAtom);
   const [views, setViews] = useAtom(viewsAtom);
@@ -158,7 +158,7 @@ function App() {
 
   // fetch initial data
   useEffect(() => {
-    fetchIndex();
+    fetchIndex().then(setValues);
     fetchTags();
   }, []);
 

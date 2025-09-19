@@ -7,7 +7,6 @@ export const SERVER = 'http://localhost:8908';
 
 // Data atoms
 export const idsAtom = atom<string[]>([]);
-export const valuesAtom = atom<Record<string, number>>({});
 export const ptMdAtom = atom<Record<string, any>>({});
 export const tagsAtom = atom<Record<string, string[]>>({});
 
@@ -17,7 +16,7 @@ export const fetchIndexAtom = atom(
   async (get, set) => {
     const data = await fetch(SERVER + "/index/").then(r => r.json());
     set(idsAtom, data.ids);
-    set(valuesAtom, data.values);
+    return data.values;
   }
 );
 
