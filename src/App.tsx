@@ -138,14 +138,18 @@ const View = ({id, onDelete}) => {
 }
 
 function App() {
-  const [ids, setIds] = useState([]);
-  const [values, setValues] = useState({});
-  const [ptMd, setPtMd] = useState({}); // point metadata cache
-  const [tags, setTags] = useState({});
+  const [ids] = useAtom(idsAtom);
+  const [values] = useAtom(valuesAtom);
+  const [ptMd] = useAtom(ptMdAtom);
+  const [tags] = useAtom(tagsAtom);
   const [views, setViews] = useAtom(viewsAtom);
   const [viewIdx, setViewIdx] = useAtom(viewIdxAtom);
   const addView = useSetAtom(addViewAtom);
   const deleteView = useSetAtom(deleteViewAtom);
+  
+  const [, fetchIndex] = useAtom(fetchIndexAtom);
+  const [, fetchTags] = useAtom(fetchTagsAtom);
+  const [, fetchPtMd] = useAtom(fetchPtMdAtom);
   console.log('Got views', views, viewIdx);
 
   // add a new view on start
@@ -154,50 +158,13 @@ function App() {
   }, []);
 
 
-  // fetch index data
+  // fetch initial data
   useEffect(() => {
-    fetch(SERVER+"/index/")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log('Got index data', data);
-        setIds(data.ids);
-        setValues(data.values);
-      });
+    fetchIndex();
+    fetchTags();
   }, []);
 
-  // fetch tags
-  useEffect(() => {
-    fetch(SERVER+"/tags/")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log('Got tags', data);
-        setTags(data.tags);
-      });
-  }, []);
-
-  // gets point metadata for given points, returns promise
-  const getPtMd = useCallback((ids) => {
-    // skip those we already have md for
-    const toGet = ids.filter(id => !ptMd[id]);
-    if (toGet.length === 0) {
-      return Promise.resolve(false); // nothing new to get
-    }
-    return fetch(SERVER+"/pt_md/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ids: toGet }),
-      })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Got point metadata", data);
-        setPtMd(prev => ({...prev, ...data.data}));
-        return true; // indicate we got new data
-      });
-  }, [])
-
-  const ptData = {ids, values, ptMd, getPtMd, tags};
+  const ptData = {ids, values, ptMd, getPtMd: fetchPtMd, tags};
 
   return (
     <PtCtx.Provider value={ptData}>

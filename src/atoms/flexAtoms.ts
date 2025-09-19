@@ -3,10 +3,54 @@
 import {atom} from 'jotai';
 import {View, Binding, Bindmap} from '../types/common';
 
-// current view index
-export const viewIdxAtom = atom<number>(0);
+const SERVER = 'http://localhost:8908';
 
-// list of views
+// Data atoms
+export const idsAtom = atom<string[]>([]);
+export const valuesAtom = atom<Record<string, number>>({});
+export const ptMdAtom = atom<Record<string, any>>({});
+export const tagsAtom = atom<Record<string, string[]>>({});
+
+// Fetch actions
+export const fetchIndexAtom = atom(
+  null,
+  async (get, set) => {
+    const data = await fetch(SERVER + "/index/").then(r => r.json());
+    set(idsAtom, data.ids);
+    set(valuesAtom, data.values);
+  }
+);
+
+export const fetchTagsAtom = atom(
+  null,
+  async (get, set) => {
+    const data = await fetch(SERVER + "/tags/").then(r => r.json());
+    set(tagsAtom, data.tags);
+  }
+);
+
+export const fetchPtMdAtom = atom(
+  null,
+  async (get, set, ids: string[]) => {
+    const currentMd = get(ptMdAtom);
+    const toGet = ids.filter(id => !currentMd[id]);
+    if (toGet.length === 0) {
+      return false;
+    }
+    const data = await fetch(SERVER + "/pt_md/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ids: toGet }),
+    }).then(r => r.json());
+    set(ptMdAtom, {...currentMd, ...data.data});
+    return true;
+  }
+);
+
+// View management atoms
+export const viewIdxAtom = atom<number>(0);
 export const viewsAtom = atom<View[]>([]);
 
 // create a new binding with given name and optional def within a view
