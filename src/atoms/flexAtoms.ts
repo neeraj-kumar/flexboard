@@ -52,6 +52,48 @@ export const fetchPtMdAtom = atom(
 export const viewIdxAtom = atom<number>(0);
 export const viewsAtom = atom<View[]>([]);
 
+// Evaluate a particular binding for a given view
+export const evaluateBindingAtom = atom(
+  null,
+  (get, set, viewId: string, bindingName: string) => {
+    const views = get(viewsAtom);
+    const view = views.find(v => v.id === viewId);
+    if (!view) return;
+    const binding = view.bindmap[bindingName];
+    if (!binding) return;
+    console.log('Evaluating binding', view, bindingName, binding);
+    // get input data
+    const ids = get(idsAtom);
+    const values = get(fetchIndexAtom); // fetchIndexAtom returns values
+    const ptMd = get(ptMdAtom);
+    const tags = get(tagsAtom);
+    // create a function from the binding definition
+    let func;
+    try {
+      func = new Function('id', 'value', 'md', 'tags', binding.def);
+    } catch (e) {
+      console.error('Error creating function for binding', bindingName, e);
+      return;
+    }
+    // evaluate the function for each id
+    const evals = ids.map(id => {
+      const value = values ? values[id] : undefined;
+      const md = ptMd[id] || {};
+      const tagList = tags[id] || [];
+      try {
+        return func(id, value, md, tagList);
+      } catch (e) {
+        console.error('Error evaluating binding', bindingName, e);
+        return null;
+      }
+    });
+    console.log('Evaluated values for binding', bindingName, evals.slice(0, 10));
+    (view.bindmap[bindingName] as any).evals = evals;
+    // update the views atom to trigger re-render
+    set(viewsAtom, [...views]);
+  }
+);
+
 // create a new binding with given name and optional def within a view
 export const addBindingAtom = atom(
   null,
@@ -63,6 +105,8 @@ export const addBindingAtom = atom(
     const newBinding: Binding = {name, def};
     console.log('Adding new binding', view, newBinding);
     view.bindmap[name] = newBinding;
+    // evaluate the new binding on the current data
+    set(evaluateBindingAtom, viewId, name);
     set(viewsAtom, [...views]);
   }
 );
@@ -72,7 +116,7 @@ export const addViewAtom = atom(
   null,
   (get, set) => {
     const views = get(viewsAtom);
-    const newView: View = {id: Date.now().toString(), bindmap: {}};
+    const newView: View = {id: Date.now().toString(), bindmap: {}, inputs: 'ids'};
     console.log('Adding new view', views, newView);
     set(viewsAtom, [...views, newView]);
     // increment viewIdx by one
