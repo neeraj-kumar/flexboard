@@ -55,7 +55,7 @@ export const viewsAtom = atom<View[]>([]);
 // Evaluate a particular binding for a given view
 export const evaluateBindingAtom = atom(
   null,
-  (get, set, viewId: string, bindingName: string, values: Record<string, number>) => {
+  (get, set, viewId: string, bindingName: string) => {
     const views = get(viewsAtom);
     const view = views.find(v => v.id === viewId);
     if (!view) return;
@@ -76,7 +76,7 @@ export const evaluateBindingAtom = atom(
     }
     // evaluate the function for each id
     const evals = ids.map(id => {
-      const value = values ? values[id] : undefined;
+      const value = 'none';
       const md = ptMd[id] || {};
       const tagList = tags[id] || [];
       try {
@@ -103,13 +103,15 @@ export const bindingWatcherAtom = atom(
     return { views, ids, ptMd, tags };
   },
   (get, set) => {
-    const { views } = get(bindingWatcherAtom);
-    const values = get(fetchIndexAtom);
-    
+    const { views, ids, ptMd, tags } = get(bindingWatcherAtom);
+    // check if tags is empty or ptMd is empty
+    if (!ids || Object.keys(tags).length === 0 || Object.keys(ptMd).length === 0) return;
+    console.log('here in watcher', ids, tags, ptMd);
+
     // Evaluate all bindings in all views
     views.forEach(view => {
       Object.keys(view.bindmap).forEach(bindingName => {
-        set(evaluateBindingAtom, view.id, bindingName, values);
+        set(evaluateBindingAtom, view.id, bindingName);
       });
     });
   }
@@ -119,16 +121,13 @@ export const bindingWatcherAtom = atom(
 export const addBindingAtom = atom(
   null,
   (get, set, viewId: string, name: string, def: string = '') => {
-    console.log('Adding binding', viewId, name, def);
     const views = get(viewsAtom);
     const view = views.find(v => v.id === viewId);
     if (!view) return;
     const newBinding: Binding = {name, def};
     console.log('Adding new binding', view, newBinding);
     view.bindmap[name] = newBinding;
-    // evaluate the new binding using current values
-    const values = get(fetchIndexAtom);
-    set(evaluateBindingAtom, viewId, name, values);
+    set(evaluateBindingAtom, viewId, name);
     set(viewsAtom, [...views]);
   }
 );
@@ -144,7 +143,8 @@ export const addViewAtom = atom(
     // increment viewIdx by one
     set(viewIdxAtom, views.length);
     // add '$filter' and '$sort' bindings to the new view
-    set(addBindingAtom, newView.id, '$filter', 'return true');
+    //set(addBindingAtom, newView.id, '$filter', 'console.log("in eval", id, value, md, tags); return true;');
+    set(addBindingAtom, newView.id, '$filter', 'return id.includes("75");');
     set(addBindingAtom, newView.id, '$sort', 'return 0');
   }
 );
