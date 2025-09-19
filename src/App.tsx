@@ -146,6 +146,7 @@ function App() {
   const [viewIdx, setViewIdx] = useAtom(viewIdxAtom);
   const addView = useSetAtom(addViewAtom);
   const deleteView = useSetAtom(deleteViewAtom);
+  console.log('Got views', views, viewIdx);
 
   // add a new view on start
   useEffect(() => {
